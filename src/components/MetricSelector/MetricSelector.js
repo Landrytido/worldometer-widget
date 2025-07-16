@@ -1,7 +1,13 @@
-// src/components/MetricSelector/MetricSelector.js (Version Worldometer)
+// src/components/MetricSelector/MetricSelector.js - Avec titres ET icônes dynamiques
 import React from "react";
 import styled from "styled-components";
 import { WORLDOMETER_METRICS } from "../../data/metrics";
+import {
+  generateDynamicTitle,
+  generateDynamicIcon,
+} from "../../utils/titleGenerator";
+import { COUNTRIES } from "../../data/countries";
+import Flag from "../Flag/Flag";
 
 const SelectorContainer = styled.div`
   margin: 20px 0;
@@ -61,6 +67,9 @@ const ButtonContent = styled.div`
 
 const ButtonIcon = styled.div`
   font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const ButtonText = styled.div`
@@ -101,7 +110,11 @@ const QuickButton = styled.button`
   }
 `;
 
-const MetricSelector = ({ selectedMetrics, onMetricsChange }) => {
+const MetricSelector = ({
+  selectedMetrics,
+  onMetricsChange,
+  selectedCountry = "world", // 🆕 Nouvelle prop pour le pays
+}) => {
   const toggleMetric = (metricKey) => {
     const updated = selectedMetrics.includes(metricKey)
       ? selectedMetrics.filter((m) => m !== metricKey)
@@ -130,18 +143,42 @@ const MetricSelector = ({ selectedMetrics, onMetricsChange }) => {
       <Label>📊 Sélectionner les statistiques :</Label>
 
       <ButtonGrid>
-        {Object.entries(WORLDOMETER_METRICS).map(([key, metric]) => (
-          <MetricButton
-            key={key}
-            selected={selectedMetrics.includes(key)}
-            onClick={() => toggleMetric(key)}
-          >
-            <ButtonContent>
-              <ButtonIcon>{metric.icon}</ButtonIcon>
-              <ButtonText>{metric.name}</ButtonText>
-            </ButtonContent>
-          </MetricButton>
-        ))}
+        {Object.entries(WORLDOMETER_METRICS).map(([key, metric]) => {
+          // 🎯 TITRE ET ICÔNE DYNAMIQUES
+          const dynamicTitle = generateDynamicTitle(key, selectedCountry);
+          const dynamicIcon = generateDynamicIcon(key, selectedCountry);
+
+          // 🔥 Rendu de l'icône (drapeau ou émoji)
+          const renderIcon = () => {
+            if (dynamicIcon === "FLAG") {
+              // Utiliser le drapeau du pays
+              const country = COUNTRIES[selectedCountry];
+              return (
+                <Flag
+                  countryCode={country?.countryCode || selectedCountry}
+                  size="24px"
+                />
+              );
+            } else {
+              // Utiliser l'icône normale (🌍, 👶, 💀, etc.)
+              return dynamicIcon;
+            }
+          };
+
+          return (
+            <MetricButton
+              key={key}
+              selected={selectedMetrics.includes(key)}
+              onClick={() => toggleMetric(key)}
+            >
+              <ButtonContent>
+                <ButtonIcon>{renderIcon()}</ButtonIcon>
+                <ButtonText>{dynamicTitle}</ButtonText>{" "}
+                {/* ✅ Titre adapté au pays */}
+              </ButtonContent>
+            </MetricButton>
+          );
+        })}
       </ButtonGrid>
 
       <QuickButtons>

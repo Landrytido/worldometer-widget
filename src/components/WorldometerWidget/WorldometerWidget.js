@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { getDynamicMessage } from "../../data/metrics";
+import Flag from "../Flag/Flag";
+import { COUNTRIES } from "../../data/countries";
 
 const WidgetContainer = styled.div`
   background: #1a1a1a;
   border-radius: 15px;
-  padding: ${(props) => (props.fullscreen ? "50px 40px" : "35px 30px")};
-  margin: 15px;
+  padding: 25px 20px;
   text-align: center;
   border: 2px solid #333;
   transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
+
+  @media (min-width: 768px) {
+    padding: ${(props) => (props.fullscreen ? "40px 30px" : "30px 25px")};
+  }
+
+  @media (min-width: 1024px) {
+    padding: ${(props) => (props.fullscreen ? "50px 40px" : "35px 30px")};
+  }
 
   &:hover {
     border-color: #00ff88;
@@ -37,56 +46,118 @@ const WidgetContainer = styled.div`
 `;
 
 const WidgetIcon = styled.div`
-  font-size: ${(props) => (props.fullscreen ? "3rem" : "2.5rem")};
-  margin-bottom: 15px;
+  font-size: 2rem;
+  margin-bottom: 12px;
   filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.3));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  @media (min-width: 768px) {
+    font-size: ${(props) => (props.fullscreen ? "2.8rem" : "2.3rem")};
+    margin-bottom: 15px;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: ${(props) => (props.fullscreen ? "3rem" : "2.5rem")};
+  }
+`;
+
+const FlagIcon = styled.div`
+  font-size: 2rem;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.3));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  @media (min-width: 768px) {
+    font-size: ${(props) => (props.fullscreen ? "2.8rem" : "2.3rem")};
+    margin-bottom: 15px;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: ${(props) => (props.fullscreen ? "3rem" : "2.5rem")};
+  }
 `;
 
 const WidgetTitle = styled.h3`
-  font-size: ${(props) => (props.fullscreen ? "1.8rem" : "1.4rem")};
+  font-size: 1.1rem;
   color: #fff;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   font-weight: 700;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
   line-height: 1.3;
+  word-wrap: break-word;
+  hyphens: auto;
+
+  @media (min-width: 768px) {
+    font-size: ${(props) => (props.fullscreen ? "1.6rem" : "1.3rem")};
+    margin-bottom: 18px;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: ${(props) => (props.fullscreen ? "1.8rem" : "1.4rem")};
+    margin-bottom: 20px;
+  }
 `;
 
 const MainValue = styled.div`
-  font-size: ${(props) => (props.fullscreen ? "5.5rem" : "4.5rem")};
+  font-size: 2.8rem;
   font-weight: 900;
   color: #00ff88;
-  margin: 25px 0;
+  margin: 20px 0;
   font-family: "Courier New", monospace;
   text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
   line-height: 1;
-  letter-spacing: -2px;
-`;
+  letter-spacing: -1px;
+  word-break: break-all;
 
-const ValueLabel = styled.div`
-  font-size: ${(props) => (props.fullscreen ? "1.3rem" : "1.1rem")};
-  color: #ccc;
-  margin-bottom: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  @media (min-width: 768px) {
+    font-size: ${(props) => (props.fullscreen ? "4.5rem" : "3.8rem")};
+    margin: 22px 0;
+    letter-spacing: -1.5px;
+  }
+
+  @media (min-width: 1024px) {
+    font-size: ${(props) => (props.fullscreen ? "5.5rem" : "4.5rem")};
+    margin: 25px 0;
+    letter-spacing: -2px;
+  }
 `;
 
 const SarcasticMessage = styled.div`
-  font-size: ${(props) => (props.fullscreen ? "1.4rem" : "1.2rem")};
+  font-size: 1rem;
   color: #ffaa00;
   font-style: italic;
-  margin-top: 25px;
+  margin-top: 20px;
   line-height: 1.4;
   font-weight: 600;
   text-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
-  padding: 15px;
+  padding: 12px;
   background: rgba(255, 170, 0, 0.1);
   border-radius: 10px;
   border: 1px solid rgba(255, 170, 0, 0.2);
-  min-height: ${(props) => (props.fullscreen ? "4rem" : "3.5rem")};
+  min-height: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  word-wrap: break-word;
+  hyphens: auto;
+
+  @media (min-width: 768px) {
+    font-size: ${(props) => (props.fullscreen ? "1.3rem" : "1.1rem")};
+    margin-top: 22px;
+    padding: 14px;
+    min-height: ${(props) => (props.fullscreen ? "3.8rem" : "3.4rem")};
+  }
+
+  @media (min-width: 1024px) {
+    font-size: ${(props) => (props.fullscreen ? "1.4rem" : "1.2rem")};
+    margin-top: 25px;
+    padding: 15px;
+    min-height: ${(props) => (props.fullscreen ? "4rem" : "3.5rem")};
+  }
 `;
 
 const AnimatedCounter = styled.span`
@@ -110,7 +181,6 @@ const WorldometerWidget = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [lastValue, setLastValue] = useState(value);
 
-  // Animation quand la valeur change
   useEffect(() => {
     if (value !== lastValue) {
       setIsUpdating(true);
@@ -119,13 +189,10 @@ const WorldometerWidget = ({
     }
   }, [value, lastValue]);
 
-  // Changer le message toutes les 6 secondes
   useEffect(() => {
-    // Message initial
     const initialMessage = getDynamicMessage(metricKey, countryCode);
     setCurrentMessage(initialMessage);
 
-    // Intervalle pour changer le message
     const interval = setInterval(() => {
       const newMessage = getDynamicMessage(metricKey, countryCode);
       setCurrentMessage(newMessage);
@@ -139,9 +206,33 @@ const WorldometerWidget = ({
     return new Intl.NumberFormat("fr-FR").format(Math.floor(num));
   };
 
+  const renderIcon = () => {
+    if (metricKey === "currentPopulation" && countryCode !== "world") {
+      const country = COUNTRIES[countryCode];
+      const flagSize = fullscreen
+        ? window.innerWidth < 768
+          ? "32px"
+          : "48px"
+        : window.innerWidth < 768
+        ? "28px"
+        : "40px";
+
+      return (
+        <FlagIcon fullscreen={fullscreen}>
+          <Flag
+            countryCode={country?.countryCode || countryCode}
+            size={flagSize}
+          />
+        </FlagIcon>
+      );
+    }
+
+    return <WidgetIcon fullscreen={fullscreen}>{icon}</WidgetIcon>;
+  };
+
   return (
     <WidgetContainer fullscreen={fullscreen}>
-      <WidgetIcon fullscreen={fullscreen}>{icon}</WidgetIcon>
+      {renderIcon()}
 
       <WidgetTitle fullscreen={fullscreen}>{title}</WidgetTitle>
 
