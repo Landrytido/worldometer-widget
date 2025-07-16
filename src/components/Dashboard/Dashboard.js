@@ -52,6 +52,44 @@ const Title = styled.h1`
   }
 `;
 
+// 🔥 BOUTON BOTTOM-RIGHT - Simple et efficace
+const FullscreenButton = styled.button`
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #00ff88, #00cc70);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  z-index: 1001;
+  font-weight: 800;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+
+  @media (min-width: 768px) {
+    padding: 14px 20px;
+    font-size: 0.95rem;
+    font-weight: 900;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 16px 24px;
+    font-size: 1.1rem;
+  }
+
+  &:hover {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`;
+
 const Controls = styled.div`
   display: flex;
   flex-direction: column;
@@ -77,34 +115,6 @@ const ControlsWrapper = styled.div`
     padding: 25px;
     border-radius: 20px;
     border: 2px solid #333;
-  }
-`;
-
-const FullscreenButton = styled.button`
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  padding: 12px 18px;
-  background: linear-gradient(135deg, #00ff88, #00cc70);
-  color: #000;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  z-index: 1001;
-  font-weight: 900;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-
-  @media (min-width: 768px) {
-    top: 20px;
-    right: 20px;
-    padding: 15px 25px;
-    font-size: 1.1rem;
-  }
-
-  &:hover {
-    transform: scale(1.05);
-    box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
   }
 `;
 
