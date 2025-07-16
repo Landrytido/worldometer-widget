@@ -108,37 +108,76 @@ const FullscreenButton = styled.button`
   }
 `;
 
+// 🔥 GRILLE OPTIMISÉE - SEULE MODIFICATION
 const WidgetsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
   gap: 15px;
   max-width: 1400px;
   margin: 0 auto;
 
+  /* 🎯 LOGIQUE INTELLIGENTE selon le nombre de widgets */
+  grid-template-columns: ${(props) => {
+    const count = props.widgetCount || 0;
+
+    // Si 1 seul widget = pleine largeur (comme avant)
+    if (count === 1) {
+      return "1fr";
+    }
+
+    // Si 2+ widgets = 2 colonnes maximum
+    return "1fr"; // Mobile d'abord
+  }};
+
   @media (min-width: 480px) {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 18px;
+    grid-template-columns: ${(props) => {
+      const count = props.widgetCount || 0;
+      if (count === 1) return "1fr";
+      return "repeat(auto-fit, minmax(280px, 1fr))";
+    }};
   }
 
   @media (min-width: 768px) {
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 20px;
+    grid-template-columns: ${(props) => {
+      const count = props.widgetCount || 0;
+
+      // 1 widget = prend toute la largeur disponible
+      if (count === 1) {
+        return "1fr";
+      }
+
+      // 2+ widgets = exactement 2 colonnes, plus larges
+      return "repeat(2, 1fr)";
+    }};
+
+    /* 🎯 LARGEUR OPTIMISÉE pour 2 colonnes rectangulaires */
+    max-width: ${(props) => {
+      const count = props.widgetCount || 0;
+      if (count === 1) return "800px"; // Widget unique plus large
+      return "1200px"; // 2 colonnes spacieuses
+    }};
   }
 
   @media (min-width: 1024px) {
-    grid-template-columns: repeat(
-      auto-fit,
-      minmax(${(props) => (props.fullscreen ? "400px" : "360px")}, 1fr)
-    );
     gap: ${(props) => (props.fullscreen ? "25px" : "22px")};
+
+    /* 🎯 ENCORE PLUS LARGE en plein écran */
+    max-width: ${(props) => {
+      const count = props.widgetCount || 0;
+      if (count === 1) return props.fullscreen ? "900px" : "800px";
+      return props.fullscreen ? "1400px" : "1200px";
+    }};
   }
 
   @media (min-width: 1400px) {
-    grid-template-columns: repeat(
-      auto-fit,
-      minmax(${(props) => (props.fullscreen ? "450px" : "380px")}, 1fr)
-    );
     gap: ${(props) => (props.fullscreen ? "30px" : "25px")};
+
+    max-width: ${(props) => {
+      const count = props.widgetCount || 0;
+      if (count === 1) return props.fullscreen ? "1000px" : "900px";
+      return props.fullscreen ? "1600px" : "1400px";
+    }};
   }
 `;
 
@@ -292,7 +331,11 @@ const Dashboard = () => {
         </CountryInfo>
       )}
 
-      <WidgetsGrid fullscreen={preferences.fullscreenMode}>
+      {/* 🎯 PASSE LE NOMBRE DE WIDGETS à la grille */}
+      <WidgetsGrid
+        fullscreen={preferences.fullscreenMode}
+        widgetCount={preferences.selectedMetrics.length}
+      >
         {preferences.selectedMetrics.map((metricKey) => {
           const metric = WORLDOMETER_METRICS[metricKey];
           const value = data.worldometer[metricKey];
