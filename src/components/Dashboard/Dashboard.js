@@ -1,3 +1,4 @@
+// src/components/Dashboard/Dashboard.js - Avec titres dynamiques
 import React from "react";
 import { useCounters } from "../../hooks/useCounters";
 import { usePreferences } from "../../hooks/usePreferences";
@@ -15,13 +16,8 @@ import styled from "styled-components";
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
-  padding: 16px;
+  padding: ${(props) => (props.fullscreen ? "40px" : "20px")};
   background: #0a0a0a;
-
-  @media (min-width: 768px) {
-    padding: 20px;
-  }
-
   ${(props) =>
     props.fullscreen &&
     `
@@ -32,86 +28,61 @@ const DashboardContainer = styled.div`
     bottom: 0;
     z-index: 1000;
     overflow-y: auto;
-    padding: 20px;
   `}
 `;
 
 const Header = styled.div`
   display: ${(props) => (props.fullscreen ? "none" : "block")};
-  margin-bottom: 30px;
-
-  @media (min-width: 768px) {
-    margin-bottom: 40px;
-  }
+  margin-bottom: 40px;
 `;
 
 const Title = styled.h1`
   color: #fff;
   text-align: center;
-  margin-bottom: 30px;
-  font-size: 2rem;
+  margin-bottom: 40px;
+  font-size: 3rem;
   text-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
   font-weight: 900;
   letter-spacing: -1px;
-
-  @media (min-width: 768px) {
-    font-size: 3rem;
-    margin-bottom: 40px;
-  }
 `;
 
 const Controls = styled.div`
   display: ${(props) => (props.fullscreen ? "none" : "flex")};
-  flex-direction: column;
-  gap: 20px;
-  margin-bottom: 30px;
-  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
 
-  @media (min-width: 1024px) {
-    flex-direction: row;
-    justify-content: center;
-    gap: 30px;
-    margin-bottom: 40px;
+  @media (max-width: 1200px) {
+    flex-direction: column;
+    align-items: center;
   }
 `;
 
 const ControlsWrapper = styled.div`
   background: rgba(26, 26, 26, 0.9);
-  padding: 20px;
-  border-radius: 15px;
+  padding: 35px;
+  border-radius: 20px;
   border: 2px solid #333;
   backdrop-filter: blur(15px);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
-  width: 100%;
-  max-width: 1200px;
-
-  @media (min-width: 768px) {
-    padding: 25px;
-  }
 `;
 
 const FullscreenButton = styled.button`
   position: fixed;
-  top: 15px;
-  right: 15px;
-  padding: 12px 20px;
+  top: 25px;
+  right: 25px;
+  padding: 15px 25px;
   background: linear-gradient(135deg, #00ff88, #00cc70);
   color: #000;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   z-index: 1001;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: 900;
+  font-size: 1.1rem;
   transition: all 0.3s ease;
   box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
-
-  @media (min-width: 768px) {
-    top: 20px;
-    right: 20px;
-    padding: 15px 25px;
-    font-size: 1rem;
-  }
 
   &:hover {
     transform: scale(1.05) translateY(-2px);
@@ -121,71 +92,46 @@ const FullscreenButton = styled.button`
 
 const WidgetsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  margin-top: 20px;
-  max-width: 1000px;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(${(props) => (props.fullscreen ? "500px" : "380px")}, 1fr)
+  );
+  gap: ${(props) => (props.fullscreen ? "40px" : "25px")};
+  margin-top: 30px;
+  max-width: 1800px;
   margin-left: auto;
   margin-right: auto;
-
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 25px;
-    margin-top: 30px;
-  }
-
-  ${(props) =>
-    props.fullscreen &&
-    `
-    gap: 30px;
-    margin-top: 20px;
-    
-    @media (min-width: 768px) {
-      gap: 40px;
-    }
-  `}
 `;
 
 const LoadingMessage = styled.div`
   color: #fff;
   text-align: center;
-  font-size: 1.5rem;
-  margin-top: 80px;
+  font-size: 2rem;
+  margin-top: 100px;
   font-weight: 600;
-
-  @media (min-width: 768px) {
-    font-size: 2rem;
-    margin-top: 100px;
-  }
 `;
 
 const CountryInfo = styled.div`
   text-align: center;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
   color: #fff;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 700;
-
-  @media (min-width: 768px) {
-    font-size: 1.4rem;
-    margin-bottom: 30px;
-  }
 `;
 
-const EmptyState = styled.div`
-  grid-column: 1 / -1;
-  text-align: center;
-  color: #fff;
-  font-size: 1.2rem;
-  padding: 40px 20px;
-  background: rgba(255, 170, 0, 0.1);
-  border-radius: 15px;
-  border: 2px dashed rgba(255, 170, 0, 0.5);
-
-  @media (min-width: 768px) {
-    font-size: 1.5rem;
-    padding: 50px;
-  }
+const SyncInfo = styled.div`
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: rgba(26, 26, 26, 0.95);
+  color: #00ff88;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  z-index: 1000;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
 `;
 
 const Dashboard = () => {
@@ -196,6 +142,7 @@ const Dashboard = () => {
     updatePreferences({ fullscreenMode: !preferences.fullscreenMode });
   };
 
+  // États de chargement
   if (!isLoaded) {
     return (
       <DashboardContainer>
@@ -230,6 +177,7 @@ const Dashboard = () => {
     );
   }
 
+  // Vérification du pays
   const selectedCountryInfo = COUNTRIES[preferences.selectedCountry];
   if (!selectedCountryInfo) {
     console.error("Pays non trouvé:", preferences.selectedCountry);
@@ -240,6 +188,7 @@ const Dashboard = () => {
     );
   }
 
+  // Rendu principal
   return (
     <DashboardContainer fullscreen={preferences.fullscreenMode}>
       <FullscreenButton onClick={toggleFullscreen}>
@@ -262,7 +211,7 @@ const Dashboard = () => {
               onMetricsChange={(metrics) =>
                 updatePreferences({ selectedMetrics: metrics })
               }
-              selectedCountry={preferences.selectedCountry}
+              selectedCountry={preferences.selectedCountry} // 🆕 Passer le pays
             />
           </Controls>
         </ControlsWrapper>
@@ -275,7 +224,7 @@ const Dashboard = () => {
             {selectedCountryInfo.name}
           </h2>
           <div style={{ fontSize: "1rem", color: "#00ff88", marginTop: "8px" }}>
-            ✅ Données temps réel synchronisées
+            ✅ Données temps réel synchronisées avec Worldometer
           </div>
         </CountryInfo>
       )}
@@ -290,6 +239,7 @@ const Dashboard = () => {
             return null;
           }
 
+          // 🎯 TITRE ET ICÔNE DYNAMIQUES
           const dynamicTitle = generateDynamicTitle(
             metricKey,
             preferences.selectedCountry
@@ -298,6 +248,8 @@ const Dashboard = () => {
             metricKey,
             preferences.selectedCountry
           );
+
+          // Utiliser l'icône dynamique ou l'icône par défaut
           const finalIcon = dynamicIcon === "FLAG" ? metric.icon : dynamicIcon;
 
           return (
@@ -305,8 +257,8 @@ const Dashboard = () => {
               key={metricKey}
               metricKey={metricKey}
               value={value}
-              title={dynamicTitle}
-              icon={finalIcon}
+              title={dynamicTitle} // ✅ Titre adapté au pays
+              icon={finalIcon} // ✅ Icône adaptée au pays
               fullscreen={preferences.fullscreenMode}
               countryCode={preferences.selectedCountry}
             />
@@ -314,11 +266,26 @@ const Dashboard = () => {
         })}
 
         {preferences.selectedMetrics.length === 0 && (
-          <EmptyState>
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              textAlign: "center",
+              color: "#fff",
+              fontSize: "1.5rem",
+              padding: "50px",
+              background: "rgba(255, 170, 0, 0.1)",
+              borderRadius: "15px",
+              border: "2px dashed rgba(255, 170, 0, 0.5)",
+            }}
+          >
             📊 Sélectionnez au moins une statistique pour commencer !
-          </EmptyState>
+          </div>
         )}
       </WidgetsGrid>
+
+      <SyncInfo>
+        🔄 Sync Worldometer: {new Date().toLocaleTimeString()}
+      </SyncInfo>
     </DashboardContainer>
   );
 };
