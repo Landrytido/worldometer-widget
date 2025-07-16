@@ -138,7 +138,6 @@ export class DataService {
     const totalDeaths = Math.floor(secondsElapsed * baseData.deathRate);
     const currentPopulation = baseData.population + totalBirths - totalDeaths;
 
-    // Calculs pour Worldometer style
     const yearStart = new Date("2025-01-01T00:00:00.000Z");
     const secondsSinceYearStart =
       (currentTime.getTime() - yearStart.getTime()) / 1000;
@@ -148,40 +147,19 @@ export class DataService {
     const secondsSinceDayStart =
       (currentTime.getTime() - dayStart.getTime()) / 1000;
 
-    // Données Worldometer
     const worldometerData = {
-      // Population actuelle
       currentPopulation: currentPopulation,
 
-      // Naissances cette année
       birthsThisYear: Math.floor(secondsSinceYearStart * baseData.birthRate),
 
-      // Naissances aujourd'hui
       birthsToday: Math.floor(secondsSinceDayStart * baseData.birthRate),
 
-      // Décès cette année
       deathsThisYear: Math.floor(secondsSinceYearStart * baseData.deathRate),
 
-      // Décès aujourd'hui
       deathsToday: Math.floor(secondsSinceDayStart * baseData.deathRate),
     };
 
-    // Debug log
-    if (countryCode === "world") {
-      console.log(`🌍 Style Worldometer:`);
-      console.log(
-        `Population: ${worldometerData.currentPopulation.toLocaleString()}`
-      );
-      console.log(
-        `Naissances année: ${worldometerData.birthsThisYear.toLocaleString()}`
-      );
-      console.log(
-        `Naissances aujourd'hui: ${worldometerData.birthsToday.toLocaleString()}`
-      );
-    }
-
     return {
-      // Compatibilité ancienne
       population: currentPopulation,
       births: baseData.birthRate,
       deaths: baseData.deathRate,
@@ -190,16 +168,11 @@ export class DataService {
       totalDeaths: totalDeaths,
       isRealData: true,
 
-      // Nouvelles données Worldometer
       worldometer: worldometerData,
     };
   }
 
-  // Méthode pour recalibrer sur Worldometer
   calibrateToWorldometer(newWorldometerValue) {
-    console.log(
-      `🔧 Recalibration: ${this.WORLDOMETER_BASE.toLocaleString()} → ${newWorldometerValue.toLocaleString()}`
-    );
     this.WORLDOMETER_BASE = newWorldometerValue;
     this.CALIBRATION_TIME = new Date();
     this.DATA.world.population = newWorldometerValue;

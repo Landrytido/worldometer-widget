@@ -1,5 +1,5 @@
-// MetricSelector.js - Version Mobile Optimisée
-import React from "react";
+// MetricSelector.js - Version Mobile Collapsible
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { WORLDOMETER_METRICS } from "../../data/metrics";
 import {
@@ -16,6 +16,7 @@ const MetricSelectorContainer = styled.div`
   border-radius: 12px;
   border: 2px solid #333;
   width: 100%;
+  transition: all 0.3s ease;
 
   @media (min-width: 768px) {
     margin: 20px 0;
@@ -25,17 +26,80 @@ const MetricSelectorContainer = styled.div`
   }
 `;
 
+const MetricHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: ${(props) => (props.isExpanded ? "15px" : "0")};
+  transition: margin-bottom 0.3s ease;
+
+  @media (min-width: 768px) {
+    margin-bottom: ${(props) => (props.isExpanded ? "20px" : "0")};
+  }
+`;
+
 const MetricLabel = styled.div`
   color: #00ff88;
-  margin-bottom: 15px;
   font-weight: 700;
   font-size: 1rem;
   text-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
-  text-align: center;
 
   @media (min-width: 768px) {
     font-size: 1.1rem;
-    margin-bottom: 20px;
+  }
+`;
+
+// 🔥 NOUVEAU : Bouton pour expand/collapse sur mobile
+const ExpandButton = styled.button`
+  background: rgba(0, 255, 136, 0.2);
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  color: #00ff88;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  @media (min-width: 768px) {
+    display: none; /* Caché sur desktop */
+  }
+
+  &:hover {
+    background: rgba(0, 255, 136, 0.3);
+    transform: scale(1.02);
+  }
+
+  .arrow {
+    transition: transform 0.3s ease;
+    transform: ${(props) =>
+      props.isExpanded ? "rotate(180deg)" : "rotate(0deg)"};
+  }
+`;
+
+// 🔥 CONTENU COLLAPSIBLE
+const CollapsibleContent = styled.div`
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  /* Mobile : Contrôlé par isExpanded */
+  max-height: ${(props) => {
+    if (window.innerWidth >= 768) return "none"; // Desktop toujours ouvert
+    return props.isExpanded ? "800px" : "0px"; // Mobile contrôlé
+  }};
+
+  opacity: ${(props) => {
+    if (window.innerWidth >= 768) return "1"; // Desktop toujours visible
+    return props.isExpanded ? "1" : "0"; // Mobile contrôlé
+  }};
+
+  @media (min-width: 768px) {
+    /* Desktop : toujours visible */
+    max-height: none !important;
+    opacity: 1 !important;
   }
 `;
 
@@ -43,6 +107,7 @@ const ButtonGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-bottom: 12px;
 
   @media (min-width: 480px) {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -51,6 +116,7 @@ const ButtonGrid = styled.div`
 
   @media (min-width: 768px) {
     gap: 15px;
+    margin-bottom: 15px;
   }
 `;
 
@@ -127,29 +193,11 @@ const ButtonText = styled.div`
   }
 `;
 
-const SelectionInfo = styled.div`
-  margin-top: 15px;
-  padding: 12px;
-  background: rgba(0, 255, 136, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(0, 255, 136, 0.3);
-  color: #00ff88;
-  font-size: 0.8rem;
-  text-align: center;
-
-  @media (min-width: 768px) {
-    margin-top: 20px;
-    padding: 15px;
-    font-size: 0.9rem;
-    border-radius: 10px;
-  }
-`;
-
 const QuickButtons = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
-  margin-top: 12px;
+  margin-bottom: 12px;
 
   @media (min-width: 480px) {
     grid-template-columns: repeat(4, 1fr);
@@ -158,7 +206,7 @@ const QuickButtons = styled.div`
 
   @media (min-width: 768px) {
     gap: 10px;
-    margin-top: 15px;
+    margin-bottom: 15px;
   }
 `;
 
@@ -190,86 +238,144 @@ const QuickButton = styled.button`
   }
 `;
 
+const SelectionInfo = styled.div`
+  padding: 12px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+  font-size: 0.8rem;
+  text-align: center;
+
+  @media (min-width: 768px) {
+    padding: 15px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+`;
+
 const MetricSelector = ({
   selectedMetrics,
   onMetricsChange,
   selectedCountry = "world",
 }) => {
+  // 🔥 ÉTAT pour contrôler l'expansion (mobile uniquement)
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 🔥 DÉTECTION de la taille d'écran
+  useEffect(() => {
+    const checkIsMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+
+      // Sur desktop, toujours expanded
+      if (!mobile) {
+        setIsExpanded(true);
+      }
+    };
+
+    checkIsMobile();
+    window.addEventListener("resize", checkIsMobile);
+    return () => window.removeEventListener("resize", checkIsMobile);
+  }, []);
+
+  // 🔥 AUTO-COLLAPSE après sélection sur mobile
+  const handleMetricChange = (metrics) => {
+    onMetricsChange(metrics);
+
+    // Sur mobile, se ferme automatiquement après sélection
+    if (isMobile && metrics.length > 0) {
+      setTimeout(() => setIsExpanded(false), 500);
+    }
+  };
+
   const toggleMetric = (metricKey) => {
     const updated = selectedMetrics.includes(metricKey)
       ? selectedMetrics.filter((m) => m !== metricKey)
       : [...selectedMetrics, metricKey];
-    onMetricsChange(updated);
+    handleMetricChange(updated);
   };
 
-  const selectAll = () => {
-    onMetricsChange(Object.keys(WORLDOMETER_METRICS));
-  };
-
-  const selectEssential = () => {
-    onMetricsChange(["currentPopulation", "birthsThisYear", "deathsThisYear"]);
-  };
-
-  const selectToday = () => {
-    onMetricsChange(["currentPopulation", "birthsToday", "deathsToday"]);
-  };
-
-  const clearAll = () => {
-    onMetricsChange([]);
-  };
+  const selectAll = () => handleMetricChange(Object.keys(WORLDOMETER_METRICS));
+  const selectEssential = () =>
+    handleMetricChange([
+      "currentPopulation",
+      "birthsThisYear",
+      "deathsThisYear",
+    ]);
+  const selectToday = () =>
+    handleMetricChange(["currentPopulation", "birthsToday", "deathsToday"]);
+  const clearAll = () => handleMetricChange([]);
 
   return (
     <MetricSelectorContainer>
-      <MetricLabel>📊 Statistiques :</MetricLabel>
+      <MetricHeader isExpanded={isExpanded}>
+        <MetricLabel>📊 Statistiques :</MetricLabel>
 
-      <ButtonGrid>
-        {Object.entries(WORLDOMETER_METRICS).map(([key, metric]) => {
-          const dynamicTitle = generateDynamicTitle(key, selectedCountry);
-          const dynamicIcon = generateDynamicIcon(key, selectedCountry);
+        {/* 🔥 BOUTON EXPAND/COLLAPSE (mobile uniquement) */}
+        {isMobile && (
+          <ExpandButton
+            isExpanded={isExpanded}
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            {isExpanded ? "Masquer" : "Choisir"}
+            <span className="arrow">▼</span>
+          </ExpandButton>
+        )}
+      </MetricHeader>
 
-          const renderIcon = () => {
-            if (dynamicIcon === "FLAG") {
-              const country = COUNTRIES[selectedCountry];
-              return (
-                <Flag
-                  countryCode={country?.countryCode || selectedCountry}
-                  size="18px"
-                />
-              );
-            } else {
-              return dynamicIcon;
-            }
-          };
+      {/* 🔥 CONTENU COLLAPSIBLE */}
+      <CollapsibleContent isExpanded={isExpanded}>
+        <ButtonGrid>
+          {Object.entries(WORLDOMETER_METRICS).map(([key, metric]) => {
+            const dynamicTitle = generateDynamicTitle(key, selectedCountry);
+            const dynamicIcon = generateDynamicIcon(key, selectedCountry);
 
-          return (
-            <MetricButton
-              key={key}
-              selected={selectedMetrics.includes(key)}
-              onClick={() => toggleMetric(key)}
-            >
-              <ButtonContent>
-                <ButtonIcon>{renderIcon()}</ButtonIcon>
-                <ButtonText>{dynamicTitle}</ButtonText>
-              </ButtonContent>
-            </MetricButton>
-          );
-        })}
-      </ButtonGrid>
+            const renderIcon = () => {
+              if (dynamicIcon === "FLAG") {
+                const country = COUNTRIES[selectedCountry];
+                return (
+                  <Flag
+                    countryCode={country?.countryCode || selectedCountry}
+                    size="18px"
+                  />
+                );
+              } else {
+                return dynamicIcon;
+              }
+            };
 
-      <QuickButtons>
-        <QuickButton onClick={selectEssential}>🎯 Essentiel</QuickButton>
-        <QuickButton onClick={selectToday}>📅 Aujourd'hui</QuickButton>
-        <QuickButton onClick={selectAll}>🌍 Tout</QuickButton>
-        <QuickButton onClick={clearAll}>🧹 Vider</QuickButton>
-      </QuickButtons>
+            return (
+              <MetricButton
+                key={key}
+                selected={selectedMetrics.includes(key)}
+                onClick={() => toggleMetric(key)}
+              >
+                <ButtonContent>
+                  <ButtonIcon>{renderIcon()}</ButtonIcon>
+                  <ButtonText>{dynamicTitle}</ButtonText>
+                </ButtonContent>
+              </MetricButton>
+            );
+          })}
+        </ButtonGrid>
 
-      <SelectionInfo>
-        ✅ {selectedMetrics.length} statistique
-        {selectedMetrics.length > 1 ? "s" : ""} sélectionnée
-        {selectedMetrics.length > 1 ? "s" : ""}
-        {selectedMetrics.length === 0 &&
-          " - Appuyez sur un bouton pour sélectionner"}
-      </SelectionInfo>
+        <QuickButtons>
+          <QuickButton onClick={selectEssential}>🎯 Essentiel</QuickButton>
+          <QuickButton onClick={selectToday}>📅 Aujourd'hui</QuickButton>
+          <QuickButton onClick={selectAll}>🌍 Tout</QuickButton>
+          <QuickButton onClick={clearAll}>🧹 Vider</QuickButton>
+        </QuickButtons>
+
+        <SelectionInfo>
+          ✅ {selectedMetrics.length} statistique
+          {selectedMetrics.length > 1 ? "s" : ""} sélectionnée
+          {selectedMetrics.length > 1 ? "s" : ""}
+          {selectedMetrics.length === 0 &&
+            " - Appuyez sur un bouton pour sélectionner"}
+        </SelectionInfo>
+      </CollapsibleContent>
     </MetricSelectorContainer>
   );
 };

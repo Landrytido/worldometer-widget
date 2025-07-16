@@ -49,7 +49,6 @@ export const usePreferences = () => {
           });
         }
       } catch (error) {
-        console.error("Erreur chargement préférences:", error);
         setPreferences(DEFAULT_PREFERENCES);
       } finally {
         setIsLoaded(true);
@@ -64,9 +63,7 @@ export const usePreferences = () => {
     setPreferences(updated);
     try {
       localStorage.setItem("worldometer-preferences", JSON.stringify(updated));
-    } catch (error) {
-      console.error("Erreur sauvegarde préférences:", error);
-    }
+    } catch (error) {}
   };
 
   return [preferences, updatePreferences, isLoaded];
