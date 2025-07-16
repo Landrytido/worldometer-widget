@@ -1,5 +1,7 @@
+// src/components/CountrySelector/CountrySelector.js (Avec drapeaux images)
 import React from "react";
 import styled from "styled-components";
+import Flag from "../Flag/Flag";
 import { COUNTRIES } from "../../data/countries";
 
 const SelectorContainer = styled.div`
@@ -21,8 +23,7 @@ const StyledSelect = styled.select`
   cursor: pointer;
   width: 100%;
   font-weight: 600;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Color Emoji",
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   &:focus {
     outline: none;
@@ -39,8 +40,7 @@ const StyledSelect = styled.select`
     color: #fff;
     padding: 12px;
     font-size: 1.1rem;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-      "Noto Color Emoji", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 `;
 
@@ -53,11 +53,25 @@ const Label = styled.label`
   text-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
 `;
 
+const SelectedCountry = styled.div`
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  color: #fff;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+`;
+
 const CountrySelector = ({ selectedCountry, onCountryChange }) => {
   const handleChange = (e) => {
     console.log("Pays sélectionné:", e.target.value);
     onCountryChange(e.target.value);
   };
+
+  const selectedCountryInfo = COUNTRIES[selectedCountry];
 
   return (
     <SelectorContainer>
@@ -65,14 +79,17 @@ const CountrySelector = ({ selectedCountry, onCountryChange }) => {
       <StyledSelect value={selectedCountry} onChange={handleChange}>
         {Object.entries(COUNTRIES).map(([key, country]) => (
           <option key={key} value={key}>
-            {country.flag} {country.name}
+            {country.name}
           </option>
         ))}
       </StyledSelect>
-      <div style={{ marginTop: "10px", color: "#888", fontSize: "0.9rem" }}>
-        Sélectionné: {COUNTRIES[selectedCountry]?.flag}{" "}
-        {COUNTRIES[selectedCountry]?.name}
-      </div>
+
+      {selectedCountryInfo && (
+        <SelectedCountry>
+          <Flag countryCode={selectedCountryInfo.countryCode} size="20px" />
+          <span>Sélectionné: {selectedCountryInfo.name}</span>
+        </SelectedCountry>
+      )}
     </SelectorContainer>
   );
 };

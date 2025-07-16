@@ -1,10 +1,11 @@
-// src/components/Dashboard/Dashboard.js (Avec sélecteur de métriques)
+// src/components/Dashboard/Dashboard.js (Syntaxe corrigée)
 import React from "react";
 import { useCounters } from "../../hooks/useCounters";
 import { usePreferences } from "../../hooks/usePreferences";
 import WorldometerWidget from "../WorldometerWidget/WorldometerWidget";
 import MetricSelector from "../MetricSelector/MetricSelector";
 import CountrySelector from "../CountrySelector/CountrySelector";
+import Flag from "../Flag/Flag";
 import { WORLDOMETER_METRICS } from "../../data/metrics";
 import { COUNTRIES } from "../../data/countries";
 import styled from "styled-components";
@@ -214,7 +215,8 @@ const Dashboard = () => {
       {preferences.fullscreenMode && (
         <CountryInfo>
           <h2>
-            {selectedCountryInfo.flag} {selectedCountryInfo.name}
+            <Flag countryCode={selectedCountryInfo.countryCode} size="32px" />
+            {selectedCountryInfo.name}
           </h2>
           <div style={{ fontSize: "1rem", color: "#00ff88", marginTop: "8px" }}>
             ✅ Données temps réel synchronisées avec Worldometer
