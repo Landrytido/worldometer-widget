@@ -310,7 +310,7 @@ const Dashboard = () => {
       </FullscreenButton>
 
       <Header fullscreen={preferences.fullscreenMode}>
-        <Title>🌍 Worldometer Widget</Title>
+        <Title>🌍 HumanSpam 🐛</Title>
         <ControlsWrapper>
           <Controls fullscreen={preferences.fullscreenMode}>
             <CountrySelector
