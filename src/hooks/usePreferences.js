@@ -1,9 +1,11 @@
+// src/hooks/usePreferences.js (Avec sélecteur de métriques)
 import { useState, useEffect } from "react";
 
 const DEFAULT_PREFERENCES = {
   selectedCountry: "world",
-  selectedMetrics: ["population", "births", "deaths"],
   fullscreenMode: false,
+  // Nouvelles métriques Worldometer par défaut
+  selectedMetrics: ["currentPopulation", "birthsThisYear", "deathsThisYear"],
 };
 
 export const usePreferences = () => {
@@ -16,9 +18,34 @@ export const usePreferences = () => {
         const saved = localStorage.getItem("worldometer-preferences");
         if (saved) {
           const parsed = JSON.parse(saved);
+
+          // Migration des anciennes métriques vers les nouvelles
+          let migratedMetrics = parsed.selectedMetrics;
+          if (migratedMetrics && migratedMetrics.includes("population")) {
+            migratedMetrics = migratedMetrics.map((metric) => {
+              switch (metric) {
+                case "population":
+                  return "currentPopulation";
+                case "births":
+                  return "birthsThisYear";
+                case "deaths":
+                  return "deathsThisYear";
+                case "growth":
+                  return "birthsToday";
+                default:
+                  return metric;
+              }
+            });
+          }
+
           setPreferences({
             ...DEFAULT_PREFERENCES,
-            ...parsed,
+            selectedCountry:
+              parsed.selectedCountry || DEFAULT_PREFERENCES.selectedCountry,
+            fullscreenMode:
+              parsed.fullscreenMode || DEFAULT_PREFERENCES.fullscreenMode,
+            selectedMetrics:
+              migratedMetrics || DEFAULT_PREFERENCES.selectedMetrics,
           });
         }
       } catch (error) {

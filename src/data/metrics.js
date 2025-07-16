@@ -1,3 +1,50 @@
+// src/data/metrics.js
+import { getRandomMessage } from "./messages";
+
+export const WORLDOMETER_METRICS = {
+  currentPopulation: {
+    name: "Population mondiale actuelle",
+    icon: "🌍",
+    type: "single",
+  },
+  birthsThisYear: {
+    name: "Naissances cette année",
+    icon: "🍼",
+    type: "single",
+  },
+  birthsToday: {
+    name: "Naissances aujourd'hui",
+    icon: "👶",
+    type: "single",
+  },
+  deathsThisYear: {
+    name: "Décès cette année",
+    icon: "⚰️",
+    type: "single",
+  },
+  deathsToday: {
+    name: "Décès aujourd'hui",
+    icon: "💀",
+    type: "single",
+  },
+};
+
+// Messages par type de métrique
+const MESSAGE_TYPES = {
+  currentPopulation: "population",
+  birthsThisYear: "births",
+  birthsToday: "births",
+  deathsThisYear: "deaths",
+  deathsToday: "deaths",
+};
+
+// Fonction pour obtenir un message dynamique
+export const getDynamicMessage = (metricKey, countryCode) => {
+  const messageType = MESSAGE_TYPES[metricKey] || "population";
+  return getRandomMessage(messageType, countryCode);
+};
+
+// Ancien système pour compatibilité
 export const METRICS = {
   population: {
     name: "Population",

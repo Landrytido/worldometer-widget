@@ -1,5 +1,6 @@
+// src/hooks/useCounters.js
 import { useState, useEffect } from "react";
-import { populationIOService } from "../services/populationIOService";
+import { dataService } from "../services/dataService";
 
 export const useCounters = (countryCode) => {
   const [data, setData] = useState(null);
@@ -9,27 +10,31 @@ export const useCounters = (countryCode) => {
   useEffect(() => {
     let interval;
 
-    const fetchAndUpdateData = async () => {
+    const fetchAndUpdateData = () => {
       try {
-        setIsLoading(true);
         setError(null);
 
-        const currentData = await populationIOService.getCurrentData(
-          countryCode
-        );
+        // Récupérer données synchronisées
+        const currentData = dataService.getCurrentData(countryCode);
         setData(currentData);
 
-        // Mettre à jour toutes les secondes
-        interval = setInterval(async () => {
-          const updatedData = await populationIOService.getCurrentData(
-            countryCode
+        // Log pour debug
+        if (countryCode === "world") {
+          console.log(
+            `🌍 Population mondiale: ${currentData.population.toLocaleString()}`
           );
+        }
+
+        setIsLoading(false);
+
+        // Mise à jour chaque seconde
+        interval = setInterval(() => {
+          const updatedData = dataService.getCurrentData(countryCode);
           setData(updatedData);
         }, 1000);
       } catch (err) {
-        console.error("Erreur hook useCounters:", err);
+        console.error("Erreur service:", err);
         setError(err.message);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -37,9 +42,7 @@ export const useCounters = (countryCode) => {
     fetchAndUpdateData();
 
     return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+      if (interval) clearInterval(interval);
     };
   }, [countryCode]);
 
