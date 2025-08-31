@@ -8,30 +8,47 @@ export const useCounters = (countryCode) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    let interval;
+    let interval = null;
+    let mounted = true;
 
-    const fetchAndUpdateData = () => {
+    const startPolling = () => {
       try {
-        setError(null);
-
+        // Première lecture immédiate
         const currentData = dataService.getCurrentData(countryCode);
+        if (!mounted) return;
         setData(currentData);
-
         setIsLoading(false);
 
+        // Poll every 5 seconds to reduce load but keep UI feeling live
         interval = setInterval(() => {
-          const updatedData = dataService.getCurrentData(countryCode);
-          setData(updatedData);
-        }, 1000);
+          try {
+            const updatedData = dataService.getCurrentData(countryCode);
+            if (!mounted) return;
+            setData(updatedData);
+          } catch (e) {
+            // ignore per-interval errors
+          }
+        }, 5000);
       } catch (err) {
-        setError(err.message);
+        if (!mounted) return;
+        setError(err.message || String(err));
         setIsLoading(false);
       }
     };
 
-    fetchAndUpdateData();
+    // Try to calibrate from API first (best effort). If calibration completes or fails, start polling.
+    (async () => {
+      try {
+        await dataService.calibrateFromAPI(countryCode);
+      } catch (e) {
+        // ignore calibration errors
+      } finally {
+        if (mounted) startPolling();
+      }
+    })();
 
     return () => {
+      mounted = false;
       if (interval) clearInterval(interval);
     };
   }, [countryCode]);

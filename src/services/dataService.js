@@ -8,121 +8,16 @@ export class DataService {
     this.WORLDOMETER_BASE = 8234799630;
     this.CALIBRATION_TIME = new Date("2025-07-15T15:30:00.000Z");
 
-    // Données calibrées
+    // Données calibrées : on initialise uniquement le 'world' par défaut.
+    // Les entrées pays seront créées ou mises à jour dynamiquement via
+    // `calibrateFromAPI(countryISO2)` afin d'utiliser des valeurs officielles.
     this.DATA = {
       world: {
         population: this.WORLDOMETER_BASE,
-        birthRate: 4.2, // Selon données Worldometer
-        deathRate: 2.0, // Selon données Worldometer
-        countryCode: "world", // Pour les drapeaux
-      },
-      CM: {
-        population: 28524175,
-        birthRate: 1.52,
-        deathRate: 0.42,
-        countryCode: "cm",
-      },
-      CG: {
-        population: 6106869,
-        birthRate: 0.83,
-        deathRate: 0.31,
-        countryCode: "cg",
-      },
-      SN: {
-        population: 18501984,
-        birthRate: 1.94,
-        deathRate: 0.35,
-        countryCode: "sn",
-      },
-      FR: {
-        population: 68521974,
-        birthRate: 2.11,
-        deathRate: 1.82,
-        countryCode: "fr",
-      },
-      BE: {
-        population: 11685814,
-        birthRate: 0.42,
-        deathRate: 0.37,
-        countryCode: "be",
-      },
-      DE: {
-        population: 84552242,
-        birthRate: 2.04,
-        deathRate: 3.26,
-        countryCode: "de",
-      },
-      JP: {
-        population: 123719238,
-        birthRate: 0.66,
-        deathRate: 3.76,
-        countryCode: "jp",
-      },
-      IN: {
-        population: 1441719852,
-        birthRate: 6.58,
-        deathRate: 2.89,
-        countryCode: "in",
-      },
-      CN: {
-        population: 1425857400,
-        birthRate: 4.02,
-        deathRate: 2.74,
-        countryCode: "cn",
-      },
-      US: {
-        population: 341145670,
-        birthRate: 3.78,
-        deathRate: 3.61,
-        countryCode: "us",
-      },
-      CA: {
-        population: 39742430,
-        birthRate: 1.33,
-        deathRate: 1.06,
-        countryCode: "ca",
-      },
-      MX: {
-        population: 132328035,
-        birthRate: 6.04,
-        deathRate: 2.13,
-        countryCode: "mx",
-      },
-      BR: {
-        population: 217637297,
-        birthRate: 7.75,
-        deathRate: 2.42,
-        countryCode: "br",
-      },
-      AR: {
-        population: 46245668,
-        birthRate: 2.09,
-        deathRate: 1.23,
-        countryCode: "ar",
-      },
-      CO: {
-        population: 52695952,
-        birthRate: 2.21,
-        deathRate: 0.81,
-        countryCode: "co",
-      },
-      AU: {
-        population: 26639544,
-        birthRate: 1.07,
-        deathRate: 0.59,
-        countryCode: "au",
-      },
-      NZ: {
-        population: 5228100,
-        birthRate: 0.218,
-        deathRate: 0.128,
-        countryCode: "nz",
-      },
-      FJ: {
-        population: 936375,
-        birthRate: 0.047,
-        deathRate: 0.019,
-        countryCode: "fj",
+        // taux par défaut (estimation) — peuvent être affinés par la suite
+        birthRate: 4.2,
+        deathRate: 2.0,
+        countryCode: "world",
       },
     };
   }
@@ -166,7 +61,11 @@ export class DataService {
       growth: baseData.birthRate - baseData.deathRate,
       totalBirths: totalBirths,
       totalDeaths: totalDeaths,
-      isRealData: true,
+      // Ces valeurs sont calculées à partir d'une base calibrée.
+      // Si une calibration officielle a été appliquée via `calibrateFromAPI`,
+      // la base provient d'une source officielle (World Bank / OWID).
+      isRealData: false,
+      calibratedFromOfficial: !!this._lastCalibrationSource,
 
       worldometer: worldometerData,
     };
@@ -176,6 +75,140 @@ export class DataService {
     this.WORLDOMETER_BASE = newWorldometerValue;
     this.CALIBRATION_TIME = new Date();
     this.DATA.world.population = newWorldometerValue;
+  }
+
+  async calibrateFromAPI(countryCodeISO2) {
+    try {
+      if (!countryCodeISO2) return null;
+
+      const cacheKey = `population_cache_${countryCodeISO2}`;
+      const now = Date.now();
+
+      // Try cache first (24h)
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.value && parsed.ts && now - parsed.ts < 24 * 3600 * 1000) {
+            // Apply calibration using cached value
+            this.calibrateToWorldometer(parsed.value);
+            this._lastCalibrationSource = parsed.source || 'cache';
+
+            // Apply to country entry as well
+            const iso2Key = countryCodeISO2 ? countryCodeISO2.toUpperCase() : null;
+            if (iso2Key && iso2Key !== 'WORLD' && iso2Key !== 'UN') {
+              const existing = this.DATA[iso2Key] || {};
+              this.DATA[iso2Key] = {
+                population: parsed.value,
+                birthRate: existing.birthRate || 1.5,
+                deathRate: existing.deathRate || 0.9,
+                countryCode: iso2Key.toLowerCase(),
+              };
+            }
+
+            return parsed.value;
+          }
+        }
+      } catch (e) {
+        // ignore localStorage errors
+      }
+
+      let iso3 = null;
+      if (
+        countryCodeISO2.toLowerCase() === 'world' ||
+        countryCodeISO2.toLowerCase() === 'un'
+      ) {
+        iso3 = 'WLD';
+      } else {
+        // Fetch country info to get ISO3
+        try {
+          const resp = await fetch(
+            `https://restcountries.com/v3.1/alpha/${countryCodeISO2}`
+          );
+          if (resp.ok) {
+            const json = await resp.json();
+            // json can be an array or object
+            const entry = Array.isArray(json) ? json[0] : json;
+            iso3 = entry?.cca3 || null;
+          }
+        } catch (e) {
+          // ignore and fallback
+          iso3 = null;
+        }
+      }
+
+      // Fallback to WLD (world) if iso3 not found
+      if (!iso3) iso3 = 'WLD';
+
+      // Query World Bank for population (uses ISO3). We request last available year (per_page=1)
+      const wbUrl = `https://api.worldbank.org/v2/country/${iso3}/indicator/SP.POP.TOTL?format=json&per_page=1`;
+      try {
+        const resp2 = await fetch(wbUrl);
+        if (resp2.ok) {
+          const json2 = await resp2.json();
+          const value = json2?.[1]?.[0]?.value || null;
+          if (value) {
+            // Apply to global and country entry
+            this.calibrateToWorldometer(value);
+            this._lastCalibrationSource = 'worldbank';
+
+            const iso2Key = countryCodeISO2 ? countryCodeISO2.toUpperCase() : null;
+            if (iso2Key && iso2Key !== 'WORLD' && iso2Key !== 'UN') {
+              const existing = this.DATA[iso2Key] || {};
+              this.DATA[iso2Key] = {
+                population: value,
+                birthRate: existing.birthRate || 1.5,
+                deathRate: existing.deathRate || 0.9,
+                countryCode: iso2Key.toLowerCase(),
+              };
+            }
+
+            try {
+              localStorage.setItem(
+                cacheKey,
+                JSON.stringify({ value, ts: now, source: 'worldbank' })
+              );
+            } catch (e) {
+              // ignore storage errors
+            }
+            return value;
+          }
+        }
+      } catch (e) {
+        // ignore network errors
+      }
+
+      return null;
+    } catch (err) {
+      // never throw from calibration to avoid breaking UI
+      return null;
+    }
+  }
+
+  // Retourne des infos de calibration pour un pays (si disponible dans le cache)
+  getCalibrationInfo(countryCodeISO2) {
+    try {
+      if (!countryCodeISO2) return null;
+      const cacheKey = `population_cache_${countryCodeISO2}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return {
+          source: parsed.source || this._lastCalibrationSource || null,
+          ts: parsed.ts || null,
+          value: parsed.value || null,
+        };
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Fallback: return global calibration info if present
+    return {
+      source: this._lastCalibrationSource || null,
+      ts: this.CALIBRATION_TIME ? this.CALIBRATION_TIME.getTime() : null,
+      value: this.DATA?.world?.population || null,
+    };
   }
 }
 

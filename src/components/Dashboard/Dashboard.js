@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useCounters } from "../../hooks/useCounters";
 import { usePreferences } from "../../hooks/usePreferences";
 import WorldometerWidget from "../WorldometerWidget/WorldometerWidget";
@@ -12,6 +12,7 @@ import {
   generateDynamicIcon,
 } from "../../utils/titleGenerator";
 import styled from "styled-components";
+import { dataService } from "../../services/dataService";
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
@@ -238,6 +239,18 @@ const CountryInfo = styled.div`
   }
 `;
 
+const CalibrationInfo = styled.div`
+  color: #ffb86b;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 600;
+
+  @media (min-width: 768px) {
+    font-size: 1rem;
+  }
+`;
+
 const EmptyState = styled.div`
   grid-column: 1 / -1;
   text-align: center;
@@ -257,10 +270,43 @@ const EmptyState = styled.div`
 const Dashboard = () => {
   const [preferences, updatePreferences, isLoaded] = usePreferences();
   const { data, isLoading, error } = useCounters(preferences.selectedCountry);
+  const [calInfo, setCalInfo] = useState(null);
 
   const toggleFullscreen = () => {
     updatePreferences({ fullscreenMode: !preferences.fullscreenMode });
   };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const refresh = () => {
+      try {
+        const info = dataService.getCalibrationInfo(
+          preferences.selectedCountry
+        );
+        if (!mounted) return;
+        if (info && info.ts) {
+          setCalInfo({
+            source: info.source || "official",
+            ts: info.ts,
+            value: info.value || null,
+          });
+        } else {
+          setCalInfo(null);
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setCalInfo(null);
+      }
+    };
+
+    refresh();
+    const id = setInterval(refresh, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, [preferences.selectedCountry]);
 
   if (!isLoaded) {
     return (
@@ -329,6 +375,14 @@ const Dashboard = () => {
             />
           </Controls>
         </ControlsWrapper>
+        {!preferences.fullscreenMode && (
+          <CalibrationInfo>
+            Source:{" "}
+            <strong>
+              {calInfo?.source ? calInfo.source : "Estimation locale"}
+            </strong>
+          </CalibrationInfo>
+        )}
       </Header>
 
       {preferences.fullscreenMode && (
@@ -338,6 +392,12 @@ const Dashboard = () => {
             {selectedCountryInfo.name}
           </h2>
           <div className="status">✅ Données temps réel</div>
+          <CalibrationInfo>
+            Source:{" "}
+            <strong>
+              {calInfo?.source ? calInfo.source : "Estimation locale"}
+            </strong>
+          </CalibrationInfo>
         </CountryInfo>
       )}
 
