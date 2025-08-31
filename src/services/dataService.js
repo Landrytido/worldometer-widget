@@ -92,11 +92,13 @@ export class DataService {
           if (parsed.value && parsed.ts && now - parsed.ts < 24 * 3600 * 1000) {
             // Apply calibration using cached value
             this.calibrateToWorldometer(parsed.value);
-            this._lastCalibrationSource = parsed.source || 'cache';
+            this._lastCalibrationSource = parsed.source || "cache";
 
             // Apply to country entry as well
-            const iso2Key = countryCodeISO2 ? countryCodeISO2.toUpperCase() : null;
-            if (iso2Key && iso2Key !== 'WORLD' && iso2Key !== 'UN') {
+            const iso2Key = countryCodeISO2
+              ? countryCodeISO2.toUpperCase()
+              : null;
+            if (iso2Key && iso2Key !== "WORLD" && iso2Key !== "UN") {
               const existing = this.DATA[iso2Key] || {};
               this.DATA[iso2Key] = {
                 population: parsed.value,
@@ -115,10 +117,10 @@ export class DataService {
 
       let iso3 = null;
       if (
-        countryCodeISO2.toLowerCase() === 'world' ||
-        countryCodeISO2.toLowerCase() === 'un'
+        countryCodeISO2.toLowerCase() === "world" ||
+        countryCodeISO2.toLowerCase() === "un"
       ) {
-        iso3 = 'WLD';
+        iso3 = "WLD";
       } else {
         // Fetch country info to get ISO3
         try {
@@ -138,7 +140,7 @@ export class DataService {
       }
 
       // Fallback to WLD (world) if iso3 not found
-      if (!iso3) iso3 = 'WLD';
+      if (!iso3) iso3 = "WLD";
 
       // Query World Bank for population (uses ISO3). We request last available year (per_page=1)
       const wbUrl = `https://api.worldbank.org/v2/country/${iso3}/indicator/SP.POP.TOTL?format=json&per_page=1`;
@@ -150,10 +152,12 @@ export class DataService {
           if (value) {
             // Apply to global and country entry
             this.calibrateToWorldometer(value);
-            this._lastCalibrationSource = 'worldbank';
+            this._lastCalibrationSource = "worldbank";
 
-            const iso2Key = countryCodeISO2 ? countryCodeISO2.toUpperCase() : null;
-            if (iso2Key && iso2Key !== 'WORLD' && iso2Key !== 'UN') {
+            const iso2Key = countryCodeISO2
+              ? countryCodeISO2.toUpperCase()
+              : null;
+            if (iso2Key && iso2Key !== "WORLD" && iso2Key !== "UN") {
               const existing = this.DATA[iso2Key] || {};
               this.DATA[iso2Key] = {
                 population: value,
@@ -166,7 +170,7 @@ export class DataService {
             try {
               localStorage.setItem(
                 cacheKey,
-                JSON.stringify({ value, ts: now, source: 'worldbank' })
+                JSON.stringify({ value, ts: now, source: "worldbank" })
               );
             } catch (e) {
               // ignore storage errors
