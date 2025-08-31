@@ -90,11 +90,9 @@ export class DataService {
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed.value && parsed.ts && now - parsed.ts < 24 * 3600 * 1000) {
-            // Apply calibration using cached value
             this.calibrateToWorldometer(parsed.value);
             this._lastCalibrationSource = parsed.source || "cache";
 
-            // Apply to country entry as well
             const iso2Key = countryCodeISO2
               ? countryCodeISO2.toUpperCase()
               : null;
